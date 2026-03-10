@@ -20,8 +20,8 @@ export default defineConfig({
         enabled: true,
       },
       manifest: {
-        id: '/',
-        name: 'Ortaq Maliyyə',
+        id: '/?v=1.1',
+        name: 'Ortaq Maliyyə v1.1',
         short_name: 'Ortaq',
         description: 'İki istifadəçi üçün ortaq maliyyə izləmə PWA tətbiqi.',
         lang: 'az',
