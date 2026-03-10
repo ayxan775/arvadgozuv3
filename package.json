@@ -1,0 +1,28 @@
+{
+  "name": "ortaq-maliyye",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "web",
+    "api",
+    "shared"
+  ],
+  "scripts": {
+    "dev": "concurrently -n web,api -c cyan,magenta \"npm run dev --workspace web\" \"npm run dev --workspace api\"",
+    "dev:web": "npm run dev --workspace web",
+    "dev:api": "npm run dev --workspace api",
+    "build": "npm run build --workspace shared && npm run build --workspace api && npm run build --workspace web",
+    "typecheck": "npm run typecheck --workspace shared && npm run typecheck --workspace api && npm run typecheck --workspace web",
+    "lint": "npm run lint --workspace api && npm run lint --workspace web",
+    "db:generate": "npm run db:generate --workspace api",
+    "db:migrate": "npm run db:migrate --workspace api",
+    "seed": "npm run seed --workspace api"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.6.2"
+  }
+}
