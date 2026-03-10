@@ -35,4 +35,4 @@ RUN mkdir -p /data/uploads /data/backups /data/sqlite
 
 EXPOSE 3000
 
-CMD ["node", "api/dist/index.js"]
+CMD ["node", "api/dist/src/index.js"]
