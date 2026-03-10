@@ -12,19 +12,11 @@
     Permissions-Policy "camera=(), microphone=(), geolocation=()"
   }
 
-  handle /api/* {
-    reverse_proxy api:3000
+  @api_routes {
+    path /api/* /auth/* /health /ready /dashboard/* /transactions* /transfers* /transfer-users* /fixed-expenses* /categories* /sync/* /notification-preferences* /push/* /stats/* /admin/summary /admin/users /admin/audit-logs
   }
 
-  handle /auth/* {
-    reverse_proxy api:3000
-  }
-
-  handle /health {
-    reverse_proxy api:3000
-  }
-
-  handle /ready {
+  handle @api_routes {
     reverse_proxy api:3000
   }
 
