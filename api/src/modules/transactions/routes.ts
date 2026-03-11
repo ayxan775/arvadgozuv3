@@ -14,6 +14,7 @@ import {
   listCategories,
   listTransactions,
   payFixedExpense,
+  savePushSubscription,
   updateFixedExpense,
   updateNotificationPreferences,
   updateTransaction,
@@ -435,6 +436,8 @@ export const transactionRoutes: FastifyPluginAsync = async (app) => {
 
     const payload = pushSubscriptionSchema.parse(request.body);
 
+    savePushSubscription(request.auth.userId!, payload);
+    
     return reply.code(201).send({
       success: true,
       subscription: payload,

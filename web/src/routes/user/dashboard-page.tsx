@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { ROUTES, type DashboardSummary, type TransactionItem } from '@shared/index';
@@ -16,6 +16,16 @@ export function DashboardPage() {
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [touchStartY, setTouchStartY] = useState<number | null>(null);
   const [suppressClickId, setSuppressClickId] = useState<string | null>(null);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [notificationItems, setNotificationItems] = useState([
+    {
+      id: 'latest-1',
+      title: 'Yeni əməliyyat qeydə alındı',
+      description: 'Son əməliyyatlar siyahısında görünür.',
+      createdAt: new Date().toISOString(),
+    },
+  ]);
+  const notificationMenuRef = useRef<HTMLDivElement | null>(null);
 
   const summaryQuery = useQuery({
     queryKey: ['dashboard', 'summary'],
@@ -167,6 +177,28 @@ export function DashboardPage() {
 
   const username = session.username ?? 'İstifadəçi';
   const pendingSyncCount = summary?.pendingSyncCount ?? 0;
+  const latestNotification = notificationItems[0] ?? null;
+
+  useEffect(() => {
+    function handleOutsideClick(event: MouseEvent) {
+      if (!notificationMenuRef.current) {
+        return;
+      }
+
+      const target = event.target;
+      if (target instanceof Node && !notificationMenuRef.current.contains(target)) {
+        setIsNotificationOpen(false);
+      }
+    }
+
+    if (isNotificationOpen) {
+      window.addEventListener('mousedown', handleOutsideClick);
+    }
+
+    return () => {
+      window.removeEventListener('mousedown', handleOutsideClick);
+    };
+  }, [isNotificationOpen]);
 
   return (
     <div className="mx-auto min-h-screen w-full max-w-md bg-[#f8f6f6] pb-32 dark:bg-[#221610]">
@@ -181,15 +213,54 @@ export function DashboardPage() {
           </div>
         </div>
 
-        <Link
-          className="relative flex size-10 items-center justify-center rounded-full bg-white text-slate-600 shadow-soft transition active:scale-90 dark:bg-slate-800 dark:text-slate-300"
-          to={ROUTES.notifications}
-        >
-          <span className="material-symbols-outlined text-[20px]">notifications</span>
-          {pendingSyncCount > 0 ? (
-            <span className="absolute right-2 top-2 size-2 rounded-full border-2 border-white bg-orange-500 dark:border-slate-800" />
+        <div className="relative" ref={notificationMenuRef}>
+          <button
+            className="relative flex size-10 items-center justify-center rounded-full bg-white text-slate-600 shadow-soft transition active:scale-90 dark:bg-slate-800 dark:text-slate-300"
+            type="button"
+            aria-label="Bildirişlər"
+            onClick={() => setIsNotificationOpen((prev) => !prev)}
+          >
+            <span className="material-symbols-outlined text-[20px]">notifications</span>
+            {pendingSyncCount > 0 || notificationItems.length > 0 ? (
+              <span className="absolute right-2 top-2 size-2 rounded-full border-2 border-white bg-orange-500 dark:border-slate-800" />
+            ) : null}
+          </button>
+
+          {isNotificationOpen ? (
+            <div className="absolute right-0 top-12 z-50 w-72 rounded-2xl border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-700 dark:bg-slate-900">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-sm font-bold text-slate-900 dark:text-slate-100">Son bildiriş</p>
+                <button
+                  type="button"
+                  className="text-xs font-bold text-rose-500 disabled:opacity-50"
+                  onClick={() => setNotificationItems([])}
+                  disabled={notificationItems.length === 0}
+                >
+                  Hamısını sil
+                </button>
+              </div>
+
+              {latestNotification ? (
+                <div className="rounded-xl bg-slate-50 p-3 dark:bg-slate-800">
+                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{latestNotification.title}</p>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{latestNotification.description}</p>
+                </div>
+              ) : (
+                <p className="rounded-xl bg-slate-50 p-3 text-xs text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                  Bildiriş yoxdur.
+                </p>
+              )}
+
+              <Link
+                className="mt-3 inline-flex w-full items-center justify-center rounded-xl bg-orange-500 px-3 py-2 text-xs font-semibold text-white"
+                to={ROUTES.notifications}
+                onClick={() => setIsNotificationOpen(false)}
+              >
+                Bütün bildirişlər
+              </Link>
+            </div>
           ) : null}
-        </Link>
+        </div>
       </header>
       <section className="px-6 pt-6">
         <div className="relative overflow-hidden rounded-[24px] bg-gradient-to-br from-orange-500 to-orange-600 p-6 text-white shadow-floating">

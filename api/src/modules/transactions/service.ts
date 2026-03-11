@@ -1,5 +1,8 @@
 import { nanoid } from 'nanoid';
+import webpush from 'web-push';
 import { and, desc, eq, gte, lte, ne, sql } from 'drizzle-orm';
+
+import { env } from '@/config/env';
 
 import { db } from '@/db/client';
 import {
@@ -7,12 +10,22 @@ import {
   balances,
   categories,
   fixedExpenses,
+  notificationCenter,
   notificationPreferences,
+  pushSubscriptions,
   syncQueueMeta,
   transactionRevisions,
   transactions,
   users,
 } from '@/db/schema';
+
+if (env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(
+    env.VAPID_SUBJECT,
+    env.VAPID_PUBLIC_KEY,
+    env.VAPID_PRIVATE_KEY
+  );
+}
 
 type TransactionInput = {
   type: 'income' | 'expense' | 'transfer';
@@ -519,7 +532,7 @@ export function deleteFixedExpense(fixedExpenseId: string, actorUserId: string, 
 }
 
 export function payFixedExpense(fixedExpenseId: string, actorUserId: string, actor: AuditActor) {
-  return db.transaction((tx: any) => {
+  const result = db.transaction((tx: any) => {
     const existing = tx.select().from(fixedExpenses).where(eq(fixedExpenses.id, fixedExpenseId)).get();
 
     if (!existing || !existing.isActive) {
@@ -594,6 +607,18 @@ export function payFixedExpense(fixedExpenseId: string, actorUserId: string, act
       unpaidMonths,
     };
   });
+
+  const partnerId = getPartnerUserId(actorUserId);
+  if (partnerId) {
+    void notifyUser(partnerId, {
+      type: 'expense',
+      title: 'Sabit xərc ödənişi',
+      body: `${result.fixedExpense.title}: ${result.paidAmount} AZN`,
+      data: { transactionId: result.transaction.id },
+    });
+  }
+
+  return result;
 }
 
 export function createTransaction(input: TransactionInput, actor: AuditActor) {
@@ -612,11 +637,21 @@ export function createTransaction(input: TransactionInput, actor: AuditActor) {
     return createTransactionInTx(tx, input, actor);
   });
 
+  const partnerId = getPartnerUserId(input.actorUserId);
+  if (partnerId) {
+    void notifyUser(partnerId, {
+      type: input.type,
+      title: input.type === 'income' ? 'Yeni gəlir' : input.type === 'transfer' ? 'Yeni transfer' : 'Yeni xərc',
+      body: `${input.amount} AZN - ${input.note ?? ''}`,
+      data: { transactionId: created.id },
+    });
+  }
+
   return created;
 }
 
 export function updateTransaction(transactionId: string, actorUserId: string, payload: TransactionUpdateInput, actor: AuditActor) {
-  return db.transaction((tx: any) => {
+  const result = db.transaction((tx: any) => {
     const existing = getTransactionOrThrow(tx, transactionId);
 
     if (existing.actorUserId !== actorUserId && actor.role !== 'admin') {
@@ -653,10 +688,22 @@ export function updateTransaction(transactionId: string, actorUserId: string, pa
 
     return updated;
   });
+
+  const partnerId = getPartnerUserId(actorUserId);
+  if (partnerId) {
+    void notifyUser(partnerId, {
+      type: 'update',
+      title: 'Yenilənmiş əməliyyat',
+      body: `${result.amount} AZN - ${result.note ?? ''}`,
+      data: { transactionId: result.id },
+    });
+  }
+
+  return result;
 }
 
 export function deleteTransaction(transactionId: string, actorUserId: string, actor: AuditActor) {
-  return db.transaction((tx: any) => {
+  const result = db.transaction((tx: any) => {
     const existing = getTransactionOrThrow(tx, transactionId);
 
     if (existing.actorUserId !== actorUserId && actor.role !== 'admin') {
@@ -690,6 +737,10 @@ export function deleteTransaction(transactionId: string, actorUserId: string, ac
     }
 
     applyTransactionEffect(tx, existing, -1);
+    
+    const existingId = existing.id;
+    const existingAmount = existing.amount;
+    const existingNote = existing.note;
 
     tx.update(transactions)
       .set({
@@ -702,8 +753,20 @@ export function deleteTransaction(transactionId: string, actorUserId: string, ac
     insertRevision(tx, existing.id, 'delete', actor.actorId, existing, { ...existing, isDeleted: true });
     insertAuditLog(tx, actor, 'delete', 'transaction', existing.id, existing);
 
-    return existing.id;
+    return { id: existingId, amount: existingAmount, note: existingNote };
   });
+
+  const partnerId = getPartnerUserId(actorUserId);
+  if (partnerId) {
+    void notifyUser(partnerId, {
+      type: 'delete',
+      title: 'Silinmiş əməliyyat',
+      body: `${result.note ?? ''} (${result.amount} AZN)`,
+      data: { transactionId: result.id },
+    });
+  }
+
+  return result.id;
 }
 
 export function getDashboardSummary(userId: string) {
@@ -857,4 +920,95 @@ export function updateNotificationPreferences(
     .run();
 
   return getNotificationPreferences(userId);
+}
+
+function getPartnerUserId(userId: string) {
+  const otherUser = db
+    .select({ id: users.id })
+    .from(users)
+    .where(and(eq(users.isActive, true), ne(users.id, userId)))
+    .get();
+  return otherUser?.id;
+}
+
+export function savePushSubscription(userId: string, subscription: any) {
+  db.insert(pushSubscriptions)
+    .values({
+      id: nanoid(),
+      userId,
+      endpoint: subscription.endpoint,
+      p256dh: subscription.keys.p256dh,
+      auth: subscription.keys.auth,
+      createdAt: new Date(),
+      lastSeenAt: new Date(),
+    })
+    .onConflictDoUpdate({
+      target: pushSubscriptions.endpoint,
+      set: {
+        lastSeenAt: new Date(),
+      },
+    })
+    .run();
+}
+
+export async function notifyUser(
+  userId: string,
+  payload: { title: string; body: string; data?: any; type: 'income' | 'expense' | 'transfer' | 'update' | 'delete' },
+) {
+  // Check preferences
+  const prefs = getNotificationPreferences(userId);
+  if (prefs) {
+    if (payload.type === 'income' && !prefs.incomeOn) return;
+    if (payload.type === 'expense' && !prefs.expenseOn) return;
+    if (payload.type === 'transfer' && !prefs.transferOn) return;
+    if (payload.type === 'update' && !prefs.updateOn) return;
+    if (payload.type === 'delete' && !prefs.deleteOn) return;
+  }
+
+  // First, save to notification center
+  const notificationId = nanoid();
+  db.insert(notificationCenter)
+    .values({
+      id: notificationId,
+      userId,
+      type: 'transaction',
+      title: payload.title,
+      body: payload.body,
+      isRead: false,
+      createdAt: new Date(),
+    })
+    .run();
+
+  // Then, send push if subscriptions exist
+  if (!env.VAPID_PUBLIC_KEY || !env.VAPID_PRIVATE_KEY) {
+    return;
+  }
+
+  const subs = db.select().from(pushSubscriptions).where(eq(pushSubscriptions.userId, userId)).all();
+  
+  for (const sub of subs) {
+    try {
+      await webpush.sendNotification(
+        {
+          endpoint: sub.endpoint,
+          keys: {
+            auth: sub.auth,
+            p256dh: sub.p256dh,
+          },
+        },
+        JSON.stringify({
+          title: payload.title,
+          body: payload.body,
+          data: payload.data,
+        })
+      );
+    } catch (error: any) {
+      if (error.statusCode === 410 || error.statusCode === 404) {
+        // Subscription has expired or is no longer valid
+        db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, sub.endpoint)).run();
+      } else {
+        console.error('Push notification failed', error);
+      }
+    }
+  }
 }
