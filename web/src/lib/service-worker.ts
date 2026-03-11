@@ -1,5 +1,7 @@
 import { registerSW } from 'virtual:pwa-register';
 
+declare const __APP_VAPID_PUBLIC_KEY__: string;
+
 export async function registerServiceWorker() {
   if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
     return null;
@@ -75,7 +77,9 @@ export async function subscribeToPush(registration: ServiceWorkerRegistration) {
     throw new Error('Push notifications are not supported in this browser.');
   }
 
-  const vapidPublicKey = (import.meta as ImportMeta & { env?: { VITE_VAPID_PUBLIC_KEY?: string } }).env?.VITE_VAPID_PUBLIC_KEY;
+  const vapidPublicKey =
+    (import.meta as ImportMeta & { env?: { VITE_VAPID_PUBLIC_KEY?: string } }).env?.VITE_VAPID_PUBLIC_KEY ||
+    __APP_VAPID_PUBLIC_KEY__;
 
   if (!vapidPublicKey) {
     throw new Error('VAPID public key is missing.');
