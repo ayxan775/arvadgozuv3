@@ -1007,8 +1007,21 @@ export async function notifyUser(
         // Subscription has expired or is no longer valid
         db.delete(pushSubscriptions).where(eq(pushSubscriptions.endpoint, sub.endpoint)).run();
       } else {
-        console.error('Push notification failed', error);
       }
     }
   }
+}
+
+export function listNotifications(userId: string) {
+  return db
+    .select()
+    .from(notificationCenter)
+    .where(eq(notificationCenter.userId, userId))
+    .orderBy(desc(notificationCenter.createdAt))
+    .limit(100)
+    .all();
+}
+
+export function clearNotifications(userId: string) {
+  db.delete(notificationCenter).where(eq(notificationCenter.userId, userId)).run();
 }

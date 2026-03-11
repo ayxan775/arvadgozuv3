@@ -32,6 +32,8 @@ export const API_ROUTES = {
   statsByUser: '/stats/by-user',
   notificationPreferences: '/notification-preferences',
   pushSubscribe: '/push/subscribe',
+  notifications: '/notifications',
+  notificationsClear: '/notifications/clear',
   syncBatch: '/sync/batch',
   adminSummary: '/admin/summary',
   adminUsers: '/admin/users',
@@ -169,6 +171,15 @@ export interface AuditLogItem {
   action: AuditAction;
   entity: string;
   time?: string;
+}
+  
+export interface NotificationItem {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  isRead: boolean;
+  createdAt: string;
 }
 
 export interface ApiSuccess<T> {

@@ -6,7 +6,8 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '..', '');
-  const vapidPublicKey = env.VITE_VAPID_PUBLIC_KEY || env.VAPID_PUBLIC_KEY || '';
+  const webEnv = loadEnv(mode, '.', 'VITE_');
+  const vapidPublicKey = webEnv.VITE_VAPID_PUBLIC_KEY || env.VITE_VAPID_PUBLIC_KEY || env.VAPID_PUBLIC_KEY || '';
 
   return {
     server: {

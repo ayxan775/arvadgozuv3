@@ -9,6 +9,8 @@ import {
   deleteFixedExpense,
   deleteTransaction,
   getNotificationPreferences,
+  listNotifications,
+  clearNotifications,
   listFixedExpenses,
   listTransferUsers,
   listCategories,
@@ -442,5 +444,34 @@ export const transactionRoutes: FastifyPluginAsync = async (app) => {
       success: true,
       subscription: payload,
     });
+  });
+
+  app.get('/notifications', async (request, reply) => {
+    const blocked = ensureAuthenticated(request, reply);
+
+    if (blocked) {
+      return blocked;
+    }
+
+    const items = listNotifications(request.auth.userId!);
+
+    return {
+      items: items.map((item) => ({
+        ...item,
+        createdAt: new Date(item.createdAt).toISOString(),
+      })),
+    };
+  });
+
+  app.post('/notifications/clear', async (request, reply) => {
+    const blocked = ensureAuthenticated(request, reply);
+
+    if (blocked) {
+      return blocked;
+    }
+
+    clearNotifications(request.auth.userId!);
+
+    return { success: true };
   });
 };
