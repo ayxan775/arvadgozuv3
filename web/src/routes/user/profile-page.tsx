@@ -105,108 +105,108 @@ export function ProfilePage() {
         }
       />
       <div className="px-6 pt-4">
-      <section className="mb-4 rounded-2xl border border-slate-100 bg-white p-4 shadow-soft dark:border-slate-800 dark:bg-slate-800/60">
-        <div className="flex items-center gap-4">
-          <div className="flex size-14 items-center justify-center rounded-full bg-orange-500/10 text-lg font-bold text-orange-600">
-            {firstLetters(username)}
+        <section className="mb-4 rounded-2xl border border-slate-100 bg-white p-4 shadow-soft dark:border-slate-800 dark:bg-slate-800/60">
+          <div className="flex items-center gap-4">
+            <div className="flex size-14 items-center justify-center rounded-full bg-orange-500/10 text-lg font-bold text-orange-600">
+              {firstLetters(username)}
+            </div>
+            <div>
+              <p className="text-lg font-bold text-slate-900 dark:text-slate-100">{username}</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{session.role ?? 'user'}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-lg font-bold text-slate-900 dark:text-slate-100">{username}</p>
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{session.role ?? 'user'}</p>
+
+          <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+            <div className="rounded-xl bg-slate-50 px-2 py-2 dark:bg-slate-700/40">
+              <p className="text-[11px] font-medium text-slate-500">Queue</p>
+              <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{offlineQueue.items.length}</p>
+            </div>
+            <div className="rounded-xl bg-slate-50 px-2 py-2 dark:bg-slate-700/40">
+              <p className="text-[11px] font-medium text-slate-500">Push</p>
+              <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{pushMutation.isSuccess ? 'Aktiv' : 'Passiv'}</p>
+            </div>
+            <Link to={ROUTES.notificationSettings} className="rounded-xl bg-slate-50 px-2 py-2 dark:bg-slate-700/40">
+              <p className="text-[11px] font-medium text-slate-500">Detallar</p>
+              <p className="text-sm font-bold text-orange-600">Aç</p>
+            </Link>
           </div>
-        </div>
+        </section>
 
-        <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-          <div className="rounded-xl bg-slate-50 px-2 py-2 dark:bg-slate-700/40">
-            <p className="text-[11px] font-medium text-slate-500">Queue</p>
-            <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{offlineQueue.items.length}</p>
+        <section className="mb-4 rounded-2xl border border-slate-100 bg-white p-4 shadow-soft dark:border-slate-800 dark:bg-slate-800/60">
+          <div className="mb-3">
+            <p className="text-sm font-bold text-slate-900 dark:text-slate-100">Görünüş</p>
+            <p className="text-xs text-slate-500">
+              Açıq / tünd rejimi seç. Hazırda: {mode === 'system' ? `Sistem (${resolvedTheme === 'dark' ? 'Tünd' : 'Açıq'})` : (mode === 'dark' ? 'Tünd' : 'Açıq')}
+            </p>
           </div>
-          <div className="rounded-xl bg-slate-50 px-2 py-2 dark:bg-slate-700/40">
-            <p className="text-[11px] font-medium text-slate-500">Push</p>
-            <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{pushMutation.isSuccess ? 'Aktiv' : 'Passiv'}</p>
-          </div>
-          <Link to={ROUTES.notificationSettings} className="rounded-xl bg-slate-50 px-2 py-2 dark:bg-slate-700/40">
-            <p className="text-[11px] font-medium text-slate-500">Ayarlar</p>
-            <p className="text-sm font-bold text-orange-600">Aç</p>
-          </Link>
-        </div>
-      </section>
 
-      <section className="mb-4 rounded-2xl border border-slate-100 bg-white p-4 shadow-soft dark:border-slate-800 dark:bg-slate-800/60">
-        <div className="mb-3">
-          <p className="text-sm font-bold text-slate-900 dark:text-slate-100">Görünüş</p>
-          <p className="text-xs text-slate-500">
-            Açıq / tünd rejimi seç. Hazırda: {mode === 'system' ? `Sistem (${resolvedTheme === 'dark' ? 'Tünd' : 'Açıq'})` : (mode === 'dark' ? 'Tünd' : 'Açıq')}
-          </p>
-        </div>
+          <div className="grid grid-cols-3 gap-2">
+            {themeOptions.map((option) => {
+              const isActive = mode === option.value;
 
-        <div className="grid grid-cols-3 gap-2">
-          {themeOptions.map((option) => {
-            const isActive = mode === option.value;
-
-            return (
-              <button
-                key={option.value}
-                type="button"
-                className={`h-10 rounded-xl border text-xs font-semibold transition ${isActive
-                  ? 'border-orange-500 bg-orange-500 text-white'
-                  : 'border-slate-200 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200'
-                  }`}
-                onClick={() => setMode(option.value)}
-              >
-                {option.label}
-              </button>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="mb-4 rounded-2xl border border-slate-100 bg-white p-4 shadow-soft dark:border-slate-800 dark:bg-slate-800/60">
-        <div className="mb-3 flex items-start justify-between gap-3">
-          <div>
-            <p className="text-sm font-bold text-slate-900 dark:text-slate-100">Push settingləri</p>
-            <p className="text-xs text-slate-500">Profil bölməsindən push idarəsini birbaşa et.</p>
-          </div>
-          <button
-            className="rounded-lg bg-orange-500 px-3 py-2 text-xs font-semibold text-white transition active:scale-95 disabled:opacity-60"
-            type="button"
-            onClick={() => void pushMutation.mutateAsync()}
-            disabled={pushMutation.isPending}
-          >
-            {pushMutation.isPending ? 'Aktivləşir...' : 'Push aktiv et'}
-          </button>
-        </div>
-
-        {pushError ? <div className="mb-3 rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700">{pushError}</div> : null}
-
-        <div className="space-y-3">
-          {settingItems.map((item) => {
-            const enabled = Boolean(preferences?.[item.key]);
-            return (
-              <div
-                key={item.key}
-                className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 px-3 py-3 dark:border-slate-700"
-              >
-                <div>
-                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{item.label}</p>
-                  <p className="text-xs text-slate-500">{item.desc}</p>
-                </div>
+              return (
                 <button
+                  key={option.value}
                   type="button"
-                  aria-label={`${item.label} toggle`}
-                  className={`relative h-8 w-14 rounded-full transition ${enabled ? 'bg-orange-500' : 'bg-slate-300 dark:bg-slate-600'}`}
-                  onClick={() => void togglePreference(item.key)}
-                  disabled={!preferences || updateMutation.isPending}
+                  className={`h-10 rounded-xl border text-xs font-semibold transition ${isActive
+                    ? 'border-orange-500 bg-orange-500 text-white'
+                    : 'border-slate-200 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200'
+                    }`}
+                  onClick={() => setMode(option.value)}
                 >
-                  <span
-                    className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow-soft transition ${enabled ? 'left-7' : 'left-1'}`}
-                  />
+                  {option.label}
                 </button>
-              </div>
-            );
-          })}
-        </div>
-      </section>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="mb-4 rounded-2xl border border-slate-100 bg-white p-4 shadow-soft dark:border-slate-800 dark:bg-slate-800/60">
+          <div className="mb-3 flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-bold text-slate-900 dark:text-slate-100">Push settingləri</p>
+              <p className="text-xs text-slate-500">Profil bölməsindən push idarəsini birbaşa et.</p>
+            </div>
+            <button
+              className="rounded-lg bg-orange-500 px-3 py-2 text-xs font-semibold text-white transition active:scale-95 disabled:opacity-60"
+              type="button"
+              onClick={() => void pushMutation.mutateAsync()}
+              disabled={pushMutation.isPending}
+            >
+              {pushMutation.isPending ? 'Aktivləşir...' : 'Push aktiv et'}
+            </button>
+          </div>
+
+          {pushError ? <div className="mb-3 rounded-lg bg-rose-50 px-3 py-2 text-xs text-rose-700">{pushError}</div> : null}
+
+          <div className="space-y-3">
+            {settingItems.map((item) => {
+              const enabled = Boolean(preferences?.[item.key]);
+              return (
+                <div
+                  key={item.key}
+                  className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 px-3 py-3 dark:border-slate-700"
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{item.label}</p>
+                    <p className="text-xs text-slate-500">{item.desc}</p>
+                  </div>
+                  <button
+                    type="button"
+                    aria-label={`${item.label} toggle`}
+                    className={`relative h-8 w-14 rounded-full transition ${enabled ? 'bg-orange-500' : 'bg-slate-300 dark:bg-slate-600'}`}
+                    onClick={() => void togglePreference(item.key)}
+                    disabled={!preferences || updateMutation.isPending}
+                  >
+                    <span
+                      className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow-soft transition ${enabled ? 'left-7' : 'left-1'}`}
+                    />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </section>
       </div>
     </div>
   );
