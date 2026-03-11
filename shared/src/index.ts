@@ -11,6 +11,7 @@ export const ROUTES = {
   transactionNewTransfer: '/transactions/new/transfer',
   stats: '/stats',
   notifications: '/notifications',
+  notificationSettings: '/notification-settings',
   profile: '/profile',
   admin: '/admin',
 } as const;
@@ -30,6 +31,9 @@ export const API_ROUTES = {
   statsByCategory: '/stats/by-category',
   statsByUser: '/stats/by-user',
   notificationPreferences: '/notification-preferences',
+  notifications: '/notifications',
+  markNotificationRead: '/notifications/:id/read',
+  markAllNotificationsRead: '/notifications/read-all',
   pushSubscribe: '/push/subscribe',
   syncBatch: '/sync/batch',
   adminSummary: '/admin/summary',
@@ -136,6 +140,16 @@ export interface NotificationPreferences {
   transferOn: boolean;
   updateOn: boolean;
   deleteOn: boolean;
+}
+
+export interface NotificationCenterItem {
+  id: string;
+  userId: string;
+  type: string;
+  title: string;
+  body: string;
+  isRead: boolean;
+  createdAt: string;
 }
 
 export interface CategoryStatItem {

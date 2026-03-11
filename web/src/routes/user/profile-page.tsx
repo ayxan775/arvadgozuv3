@@ -125,8 +125,8 @@ export function ProfilePage() {
             <p className="text-[11px] font-medium text-slate-500">Push</p>
             <p className="text-sm font-bold text-slate-900 dark:text-slate-100">{pushMutation.isSuccess ? 'Aktiv' : 'Passiv'}</p>
           </div>
-          <Link to={ROUTES.notifications} className="rounded-xl bg-slate-50 px-2 py-2 dark:bg-slate-700/40">
-            <p className="text-[11px] font-medium text-slate-500">Detallar</p>
+          <Link to={ROUTES.notificationSettings} className="rounded-xl bg-slate-50 px-2 py-2 dark:bg-slate-700/40">
+            <p className="text-[11px] font-medium text-slate-500">Ayarlar</p>
             <p className="text-sm font-bold text-orange-600">Aç</p>
           </Link>
         </div>

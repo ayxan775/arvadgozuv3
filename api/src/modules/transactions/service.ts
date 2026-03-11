@@ -1012,3 +1012,27 @@ export async function notifyUser(
     }
   }
 }
+
+export function listNotifications(userId: string) {
+  return db
+    .select()
+    .from(notificationCenter)
+    .where(eq(notificationCenter.userId, userId))
+    .orderBy(desc(notificationCenter.createdAt))
+    .limit(50)
+    .all();
+}
+
+export function markNotificationAsRead(userId: string, id: string) {
+  db.update(notificationCenter)
+    .set({ isRead: true })
+    .where(and(eq(notificationCenter.id, id), eq(notificationCenter.userId, userId)))
+    .run();
+}
+
+export function markAllNotificationsAsRead(userId: string) {
+  db.update(notificationCenter)
+    .set({ isRead: true })
+    .where(eq(notificationCenter.userId, userId))
+    .run();
+}

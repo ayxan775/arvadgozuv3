@@ -10,7 +10,7 @@ import { api, ApiError } from '@/lib/api';
 import { useOfflineQueue } from '@/hooks/use-offline-queue';
 import { registerServiceWorker, requestNotificationPermission, subscribeToPush } from '@/lib/service-worker';
 
-export function NotificationsPage() {
+export function NotificationSettingsPage() {
   const queryClient = useQueryClient();
   const offlineQueue = useOfflineQueue();
 
@@ -77,8 +77,8 @@ export function NotificationsPage() {
   return (
     <div className="mx-auto min-h-screen w-full max-w-md bg-[#f8f6f6] pb-32 pt-2 dark:bg-[#221610]">
       <MobileNativeHeader
-        title="Bildirişlər"
-        backTo={ROUTES.dashboard}
+        title="Bildiriş ayarları"
+        backTo={ROUTES.profile}
         rightSlot={
           <button
             className="flex h-10 items-center justify-center rounded-full px-2 text-xs font-bold text-orange-600 transition active:scale-95 disabled:opacity-50"

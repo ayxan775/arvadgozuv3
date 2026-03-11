@@ -18,7 +18,8 @@ import { FixedExpensesPage } from '@/routes/user/fixed-expenses-page';
 import { NewExpensePage } from '@/routes/user/new-expense-page';
 import { NewIncomePage } from '@/routes/user/new-income-page';
 import { NewTransferPage } from '@/routes/user/new-transfer-page';
-import { NotificationsPage } from '@/routes/user/notifications-page';
+import { NotificationsListPage } from '@/routes/user/notifications-list-page';
+import { NotificationSettingsPage } from '@/routes/user/notifications-page';
 import { ProfilePage } from '@/routes/user/profile-page';
 import { StatsPage } from '@/routes/user/stats-page';
 import { TransactionDetailPage } from '@/routes/user/transaction-detail-page';
@@ -52,7 +53,8 @@ export const router = createBrowserRouter([
               { path: ROUTES.transactionNewExpense.slice(1), element: <NewExpensePage /> },
               { path: ROUTES.transactionNewTransfer.slice(1), element: <NewTransferPage /> },
               { path: ROUTES.stats.slice(1), element: <StatsPage /> },
-              { path: ROUTES.notifications.slice(1), element: <NotificationsPage /> },
+              { path: ROUTES.notifications.slice(1), element: <NotificationsListPage /> },
+              { path: ROUTES.notificationSettings.slice(1), element: <NotificationSettingsPage /> },
               { path: ROUTES.profile.slice(1), element: <ProfilePage /> },
             ],
           },

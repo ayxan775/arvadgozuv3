@@ -17,14 +17,6 @@ export function DashboardPage() {
   const [touchStartY, setTouchStartY] = useState<number | null>(null);
   const [suppressClickId, setSuppressClickId] = useState<string | null>(null);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [notificationItems, setNotificationItems] = useState([
-    {
-      id: 'latest-1',
-      title: 'Yeni əməliyyat qeydə alındı',
-      description: 'Son əməliyyatlar siyahısında görünür.',
-      createdAt: new Date().toISOString(),
-    },
-  ]);
   const notificationMenuRef = useRef<HTMLDivElement | null>(null);
 
   const summaryQuery = useQuery({
@@ -40,6 +32,11 @@ export function DashboardPage() {
   const categoriesQuery = useQuery({
     queryKey: ['categories'],
     queryFn: () => api.getCategories(),
+  });
+
+  const notificationsQuery = useQuery({
+    queryKey: ['notifications', 'list'],
+    queryFn: () => api.getNotifications(),
   });
 
   const summary: DashboardSummary | undefined = summaryQuery.data;
@@ -177,7 +174,9 @@ export function DashboardPage() {
 
   const username = session.username ?? 'İstifadəçi';
   const pendingSyncCount = summary?.pendingSyncCount ?? 0;
-  const latestNotification = notificationItems[0] ?? null;
+  const notifications = notificationsQuery.data?.items ?? [];
+  const unreadCount = notifications.filter(n => !n.isRead).length;
+  const latestNotification = notifications[0] ?? null;
 
   useEffect(() => {
     function handleOutsideClick(event: MouseEvent) {
@@ -221,7 +220,7 @@ export function DashboardPage() {
             onClick={() => setIsNotificationOpen((prev) => !prev)}
           >
             <span className="material-symbols-outlined text-[20px]">notifications</span>
-            {pendingSyncCount > 0 || notificationItems.length > 0 ? (
+            {pendingSyncCount > 0 || unreadCount > 0 ? (
               <span className="absolute right-2 top-2 size-2 rounded-full border-2 border-white bg-orange-500 dark:border-slate-800" />
             ) : null}
           </button>
@@ -230,20 +229,24 @@ export function DashboardPage() {
             <div className="absolute right-0 top-12 z-50 w-72 rounded-2xl border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-700 dark:bg-slate-900">
               <div className="mb-2 flex items-center justify-between">
                 <p className="text-sm font-bold text-slate-900 dark:text-slate-100">Son bildiriş</p>
-                <button
-                  type="button"
-                  className="text-xs font-bold text-rose-500 disabled:opacity-50"
-                  onClick={() => setNotificationItems([])}
-                  disabled={notificationItems.length === 0}
-                >
-                  Hamısını sil
-                </button>
+                {unreadCount > 0 && (
+                  <button
+                    type="button"
+                    className="text-xs font-bold text-orange-600 active:scale-95 disabled:opacity-50"
+                    onClick={() => {
+                      void api.markAllNotificationsRead();
+                      void queryClient.invalidateQueries({ queryKey: ['notifications', 'list'] });
+                    }}
+                  >
+                    Oxundu et
+                  </button>
+                )}
               </div>
 
               {latestNotification ? (
-                <div className="rounded-xl bg-slate-50 p-3 dark:bg-slate-800">
+                <div className={`rounded-xl p-3 ${latestNotification.isRead ? 'bg-slate-50 opacity-70' : 'bg-orange-50 border border-orange-100'}`}>
                   <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{latestNotification.title}</p>
-                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{latestNotification.description}</p>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{latestNotification.body}</p>
                 </div>
               ) : (
                 <p className="rounded-xl bg-slate-50 p-3 text-xs text-slate-500 dark:bg-slate-800 dark:text-slate-400">

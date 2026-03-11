@@ -15,6 +15,7 @@ import {
   type FixedExpenseSummary,
   type DashboardSummary,
   type LoginRequest,
+  type NotificationCenterItem,
   type NotificationPreferences,
   type PushSubscriptionRequest,
   type SessionState,
@@ -204,6 +205,15 @@ export const api = {
     request<{ success: boolean; preferences: NotificationPreferences }>(API_ROUTES.notificationPreferences, {
       method: 'PUT',
       body: payload as unknown as SerializableBody,
+    }),
+  getNotifications: () => request<{ items: NotificationCenterItem[] }>(API_ROUTES.notifications),
+  markNotificationRead: (id: string) =>
+    request<{ success: boolean }>(API_ROUTES.markNotificationRead.replace(':id', id), {
+      method: 'POST',
+    }),
+  markAllNotificationsRead: () =>
+    request<{ success: boolean }>(API_ROUTES.markAllNotificationsRead, {
+      method: 'POST',
     }),
   subscribePush: (payload: PushSubscriptionRequest) =>
     request<{ success: boolean; subscription: PushSubscriptionRequest }>(API_ROUTES.pushSubscribe, {

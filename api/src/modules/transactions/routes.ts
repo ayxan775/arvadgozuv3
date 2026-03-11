@@ -13,6 +13,9 @@ import {
   listTransferUsers,
   listCategories,
   listTransactions,
+  markAllNotificationsAsRead,
+  markNotificationAsRead,
+  listNotifications,
   payFixedExpense,
   savePushSubscription,
   updateFixedExpense,
@@ -442,5 +445,33 @@ export const transactionRoutes: FastifyPluginAsync = async (app) => {
       success: true,
       subscription: payload,
     });
+  });
+
+  app.get('/notifications', async (request, reply) => {
+    const blocked = ensureAuthenticated(request, reply);
+    if (blocked) return blocked;
+
+    return {
+      items: listNotifications(request.auth.userId!).map((item) => ({
+        ...item,
+        createdAt: new Date(item.createdAt).toISOString(),
+      })),
+    };
+  });
+
+  app.post('/notifications/:id/read', async (request, reply) => {
+    const blocked = ensureAuthenticated(request, reply);
+    if (blocked) return blocked;
+
+    markNotificationAsRead(request.auth.userId!, (request.params as { id: string }).id);
+    return { success: true };
+  });
+
+  app.post('/notifications/read-all', async (request, reply) => {
+    const blocked = ensureAuthenticated(request, reply);
+    if (blocked) return blocked;
+
+    markAllNotificationsAsRead(request.auth.userId!);
+    return { success: true };
   });
 };

@@ -8,6 +8,7 @@ export default defineConfig({
   server: {
     host: true,
   },
+  envDir: '..',
   plugins: [
     react(),
     VitePWA({
