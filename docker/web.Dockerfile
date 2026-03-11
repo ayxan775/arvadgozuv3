@@ -18,6 +18,11 @@ COPY web/index.html ./web/index.html
 COPY web/public ./web/public
 COPY web/src ./web/src
 
+ARG VITE_VAPID_PUBLIC_KEY
+ARG VITE_API_BASE_URL
+ENV VITE_VAPID_PUBLIC_KEY=$VITE_VAPID_PUBLIC_KEY
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+
 RUN npm install
 RUN npm run build --workspace shared && npm run build --workspace web
 
